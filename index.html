@@ -1,31 +1,28 @@
 <!DOCTYPE html>
-<html lang="hu">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Visszaszámláló</title>
-</head>
-<body>
-    <h1>Valós idejű visszaszámláló</h1>
-    <div>
-        <p id="countdownDisplay">Visszaszámlálás: 0</p>
-        <input type="number" id="setTime" placeholder="Másodpercek" />
-        <button onclick="setCountdown()">Visszaszámlálás indítása</button>
-    </div>
-
-    <script src="/socket.io/socket.io.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timer</title>
+    <script src="/socket.io/socket.io.js"></script> <!-- A socket.io.js betöltése -->
     <script>
-        const socket = io();
+        const socket = io(); // A kapcsolat létrehozása a szerverrel
 
-        // Idő frissítése valós időben
-        socket.on("updateCountdown", (time) => {
-            document.getElementById("countdownDisplay").innerText = `Visszaszámlálás: ${time}`;
+        socket.on('updateCountdown', function(countdownTime) {
+            // Visszaszámláló frissítése
+            document.getElementById("timer").innerText = countdownTime;
         });
 
-        // Új idő beállítása
         function setCountdown() {
-            const time = parseInt(document.getElementById("setTime").value);
-            socket.emit("setCountdown", time);
+            const timeInput = document.getElementById('timeInput').value;
+            socket.emit('setCountdown', parseInt(timeInput)); // Esemény küldése a szervernek
         }
     </script>
+</head>
+<body>
+    <h1>Visszaszámláló</h1>
+    <p id="timer">0</p>
+    <input type="number" id="timeInput" placeholder="Adja meg az időt másodpercben" />
+    <button onclick="setCountdown()">Indítás</button>
 </body>
 </html>
