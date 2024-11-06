@@ -13,7 +13,7 @@
             height: 100vh;
             margin: 0;
             font-family: Arial, sans-serif;
-            background-color: #f0f0f0; /* Világos szürke háttér */
+            background-color: #f0f0f0; 
         }
         #timer-container {
             display: flex;
@@ -21,13 +21,13 @@
             align-items: center;
             justify-content: center;
             width: 100%;
-            height: 70vh; /* Kitölti a kijelző nagy részét */
+            height: 70vh; 
         }
         #timer {
-            font-size: 140px; /* Nagyobb betűméret */
-            font-weight: bold; /* Vastagabb betűtípus */
-            background-color: #333; /* Szürkés háttér */
-            color: #fff; /* Fehér betűszín */
+            font-size: 140px; 
+            font-weight: bold; 
+            background-color: #333; 
+            color: #fff; 
             padding: 20px;
             border-radius: 10px;
             text-align: center;
@@ -54,10 +54,9 @@
     </style>
     <script src="https://cdn.socket.io/4.7.1/socket.io.min.js"></script>
     <script>
-        const socket = io(); // Socket kapcsolat létrehozása a szerverrel
+        const socket = io(); 
 
         socket.on('updateCountdown', function(countdownTime) {
-            // Visszaszámláló frissítése
             const hours = Math.floor(countdownTime / 3600);
             const minutes = Math.floor((countdownTime % 3600) / 60);
             const seconds = countdownTime % 60;
@@ -69,11 +68,11 @@
             const hours = parseInt(document.getElementById('hoursInput').value) || 0;
             const minutes = parseInt(document.getElementById('minutesInput').value) || 0;
             const timeInSeconds = (hours * 3600) + (minutes * 60);
-            socket.emit('setCountdown', timeInSeconds); // Visszaszámlálási idő elküldése a szervernek
+            socket.emit('setCountdown', timeInSeconds); 
         }
 
         function stopCountdown() {
-            socket.emit('stopCountdown'); // Visszaszámlálási idő megállítása a szerveren
+            socket.emit('stopCountdown'); 
         }
     </script>
 </head>
