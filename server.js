@@ -6,39 +6,39 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
 
-let countdownTime = 0; // Countdown time in seconds
+let countdownTime = 0; // Visszaszámlálási idő másodpercben
 
-// Handle incoming socket connections
+// Bejövő socket kapcsolatok kezelése
 io.on("connection", (socket) => {
-    console.log("New client connected");
+    console.log("Új kliens csatlakozott");
 
-    // Send initial countdown time to the new client
+    // Kezdeti visszaszámlálási idő küldése az új kliensnek
     socket.emit("updateCountdown", countdownTime);
 
-    // Set countdown time when received from the client
+    // Visszaszámlálási idő beállítása a kliens által küldött érték alapján
     socket.on("setCountdown", (time) => {
         countdownTime = time;
-        io.emit("updateCountdown", countdownTime); // Emit the updated countdown time to all clients
+        io.emit("updateCountdown", countdownTime); // Frissített visszaszámlálási idő elküldése minden kliensnek
     });
 
-    // Handle disconnection
+    // Kapcsolat bontása kezelése
     socket.on("disconnect", () => {
-        console.log("Client disconnected");
+        console.log("Kliens lecsatlakozott");
     });
 });
 
-// Serve static files (such as the index.html file)
-app.use(express.static('public')); // Ensure your index.html is in the 'public' folder
+// Statikus fájlok kiszolgálása (pl. az index.html fájl)
+app.use(express.static('public')); // Győződj meg róla, hogy az index.html a 'public' mappában van
 
-// Start the server
+// Szerver indítása
 server.listen(3000, () => {
-    console.log("Server running on port 3000");
+    console.log("Szerver fut a 3000-es porton");
 });
 
-// Countdown timer logic
+// Visszaszámláló logika
 setInterval(() => {
     if (countdownTime > 0) {
         countdownTime--;
-        io.emit("updateCountdown", countdownTime); // Update all clients every second
+        io.emit("updateCountdown", countdownTime); // Minden kliens frissítése másodpercenként
     }
 }, 1000);
