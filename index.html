@@ -4,19 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Timer</title>
- <script src="https://cdn.socket.io/4.7.1/socket.io.min.js"></script>
-
+    <script src="https://cdn.socket.io/4.7.1/socket.io.min.js"></script>
     <script>
-        const socket = io(); // A kapcsolat létrehozása a szerverrel
+        const socket = io(); // Creating the socket connection to the server
 
         socket.on('updateCountdown', function(countdownTime) {
-            // Visszaszámláló frissítése
+            // Update the countdown display
             document.getElementById("timer").innerText = countdownTime;
         });
 
         function setCountdown() {
             const timeInput = document.getElementById('timeInput').value;
-            socket.emit('setCountdown', parseInt(timeInput)); // Esemény küldése a szervernek
+            socket.emit('setCountdown', parseInt(timeInput)); // Emit event to server to set the time
         }
     </script>
 </head>
