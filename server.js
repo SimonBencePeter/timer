@@ -1,29 +1,44 @@
-const express = require('express');
-const http = require('http');
-const socketIo = require('socket.io');
+const express = require("express");
+const http = require("http");
+const socketIo = require("socket.io");
 
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
 
-let countdownTime = 0; // Kezdeti idő másodpercekben
+let countdownTime = 0; // Countdown time in seconds
 
-io.on('connection', (socket) => {
-    console.log('Új kliens csatlakozott');
+// Handle incoming socket connections
+io.on("connection", (socket) => {
+    console.log("New client connected");
 
-    // Küldd el az aktuális visszaszámlálást
-    socket.emit('updateCountdown', countdownTime);
+    // Send initial countdown time to the new client
+    socket.emit("updateCountdown", countdownTime);
 
-    // Figyeld a visszaszámlálás beállítását
-    socket.on('setCountdown', (time) => {
+    // Set countdown time when received from the client
+    socket.on("setCountdown", (time) => {
         countdownTime = time;
-        io.emit('updateCountdown', countdownTime); // Frissítés minden kliensnek
+        io.emit("updateCountdown", countdownTime); // Emit the updated countdown time to all clients
+    });
+
+    // Handle disconnection
+    socket.on("disconnect", () => {
+        console.log("Client disconnected");
     });
 });
 
-// Statikus fájlok kiszolgálása
-app.use(express.static('public'));
+// Serve static files (such as the index.html file)
+app.use(express.static('public')); // Ensure your index.html is in the 'public' folder
 
+// Start the server
 server.listen(3000, () => {
-    console.log('Szerver fut a 3000-es porton');
+    console.log("Server running on port 3000");
 });
+
+// Countdown timer logic
+setInterval(() => {
+    if (countdownTime > 0) {
+        countdownTime--;
+        io.emit("updateCountdown", countdownTime); // Update all clients every second
+    }
+}, 1000);
