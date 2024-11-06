@@ -8,6 +8,7 @@ const server = http.createServer(app);
 const io = socketIo(server);
 
 let countdownTime = 0; // Visszaszámlálási idő másodpercben
+let countdownInterval; // Visszaszámláló intervallum
 
 // Bejövő socket kapcsolatok kezelése
 io.on("connection", (socket) => {
@@ -19,6 +20,23 @@ io.on("connection", (socket) => {
     // Visszaszámlálási idő beállítása a kliens által küldött érték alapján
     socket.on("setCountdown", (time) => {
         countdownTime = time;
+        clearInterval(countdownInterval); // Előző visszaszámláló intervallum törlése, ha van
+        io.emit("updateCountdown", countdownTime); // Frissített visszaszámlálási idő elküldése minden kliensnek
+
+        // Új visszaszámláló intervallum beállítása
+        countdownInterval = setInterval(() => {
+            if (countdownTime > 0) {
+                countdownTime--;
+                io.emit("updateCountdown", countdownTime); // Minden kliens frissítése másodpercenként
+            } else {
+                clearInterval(countdownInterval); // Visszaszámlálás leállítása, ha elérte a nullát
+            }
+        }, 1000);
+    });
+
+    // Visszaszámlálás megállítása
+    socket.on("stopCountdown", () => {
+        clearInterval(countdownInterval);
         io.emit("updateCountdown", countdownTime); // Frissített visszaszámlálási idő elküldése minden kliensnek
     });
 
@@ -35,11 +53,3 @@ app.use(express.static(path.join(__dirname)));
 server.listen(3000, () => {
     console.log("Szerver fut a 3000-es porton");
 });
-
-// Visszaszámláló logika
-setInterval(() => {
-    if (countdownTime > 0) {
-        countdownTime--;
-        io.emit("updateCountdown", countdownTime); // Minden kliens frissítése másodpercenként
-    }
-}, 1000);
