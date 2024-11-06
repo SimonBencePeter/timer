@@ -6,7 +6,7 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
 
-let countdownTime = 0; // Visszaszámlálási idő másodpercekben
+let countdownTime = 0; // Kezdeti visszaszámláló érték
 
 // Üzenet küldése minden kliensnek, amikor a visszaszámlálás változik
 io.on("connection", (socket) => {
@@ -26,14 +26,6 @@ io.on("connection", (socket) => {
     });
 });
 
-// Másodpercenként csökkenti az időt, ha a visszaszámlálás elindult
-setInterval(() => {
-    if (countdownTime > 0) {
-        countdownTime--;
-        io.emit("updateCountdown", countdownTime); // Frissítés minden kliensnek
-    }
-}, 1000);
-
 // Egyszerű weboldal kiszolgálása
 app.get("/", (req, res) => {
     res.sendFile(__dirname + "/index.html");
@@ -42,3 +34,11 @@ app.get("/", (req, res) => {
 server.listen(3000, () => {
     console.log("Szerver fut a 3000-es porton");
 });
+
+// Másodpercenként csökkenti az időt, ha a visszaszámlálás elindult
+setInterval(() => {
+    if (countdownTime > 0) {
+        countdownTime--;
+        io.emit("updateCountdown", countdownTime); // Frissítés minden kliensnek
+    }
+}, 1000);
