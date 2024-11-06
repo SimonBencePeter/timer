@@ -7,18 +7,19 @@
     <style>
         body {
             display: flex;
-            flex-direction: row;
-            justify-content: space-around;
+            flex-direction: column;
             align-items: center;
             height: 100vh;
             margin: 0;
             font-family: Arial, sans-serif;
+            background-color: #f0f0f0; /* Világos szürke háttér a testnek */
         }
         section {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            width: 100%;
         }
         #timer {
             font-size: 72px; /* Nagyobb betűméret */
@@ -27,16 +28,19 @@
             color: #fff; /* Fehér betűszín */
             padding: 20px;
             border-radius: 10px;
+            margin-bottom: 20px;
         }
         input {
             margin: 5px 0;
             padding: 10px;
             font-size: 16px;
+            width: 80%; /* Szélesebb beviteli mezők */
         }
         button {
             padding: 10px 20px;
             font-size: 16px;
             cursor: pointer;
+            margin-top: 10px;
         }
     </style>
     <script src="https://cdn.socket.io/4.7.1/socket.io.min.js"></script>
