@@ -1,6 +1,7 @@
 const express = require("express");
 const http = require("http");
 const socketIo = require("socket.io");
+const path = require("path");
 
 const app = express();
 const server = http.createServer(app);
@@ -28,7 +29,7 @@ io.on("connection", (socket) => {
 });
 
 // Statikus fájlok kiszolgálása (pl. az index.html fájl)
-app.use(express.static('public')); // Győződj meg róla, hogy az index.html a 'public' mappában van
+app.use(express.static(path.join(__dirname)));
 
 // Szerver indítása
 server.listen(3000, () => {
