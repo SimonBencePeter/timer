@@ -9,32 +9,41 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: center;
             height: 100vh;
             margin: 0;
             font-family: Arial, sans-serif;
-            background-color: #f0f0f0; /* Világos szürke háttér a testnek */
+            background-color: #f0f0f0; /* Világos szürke háttér */
         }
-        section {
+        #timer-container {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             width: 100%;
+            height: 70vh; /* Kitölti a kijelző nagy részét */
         }
         #timer {
-            font-size: 72px; /* Nagyobb betűméret */
+            font-size: 140px; /* Nagyobb betűméret */
             font-weight: bold; /* Vastagabb betűtípus */
             background-color: #333; /* Szürkés háttér */
             color: #fff; /* Fehér betűszín */
             padding: 20px;
             border-radius: 10px;
-            margin-bottom: 20px;
+            text-align: center;
+        }
+        #input-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 80%;
+            margin-top: 20px;
         }
         input {
             margin: 5px 0;
             padding: 10px;
             font-size: 16px;
-            width: 80%; /* Szélesebb beviteli mezők */
+            width: 100%; /* Széles beviteli mezők */
         }
         button {
             padding: 10px 20px;
@@ -52,7 +61,8 @@
             const hours = Math.floor(countdownTime / 3600);
             const minutes = Math.floor((countdownTime % 3600) / 60);
             const seconds = countdownTime % 60;
-            document.getElementById("timer").innerText = `${hours}:${minutes}:${seconds}`;
+            const hoursText = hours > 0 ? `${hours}:` : "";
+            document.getElementById("timer").innerText = `${hoursText}${minutes}:${seconds}`;
         });
 
         function setCountdown() {
@@ -61,17 +71,22 @@
             const timeInSeconds = (hours * 3600) + (minutes * 60);
             socket.emit('setCountdown', timeInSeconds); // Visszaszámlálási idő elküldése a szervernek
         }
+
+        function stopCountdown() {
+            socket.emit('stopCountdown'); // Visszaszámlálási idő megállítása a szerveren
+        }
     </script>
 </head>
 <body>
-    <section>
+    <div id="timer-container">
         <h1>Visszaszámláló</h1>
-        <p id="timer">0:0:0</p>
-    </section>
-    <section>
+        <p id="timer">0:0</p>
+    </div>
+    <div id="input-container">
         <input type="number" id="hoursInput" placeholder="Adja meg az órák számát" />
         <input type="number" id="minutesInput" placeholder="Adja meg a percek számát" />
         <button onclick="setCountdown()">Indítás</button>
-    </section>
+        <button onclick="stopCountdown()">Megállítás</button>
+    </div>
 </body>
 </html>
