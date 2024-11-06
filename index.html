@@ -39,6 +39,11 @@
             width: 80%;
             margin-top: 20px;
         }
+        .button-container {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+        }
         input {
             margin: 5px 0;
             padding: 10px;
@@ -55,6 +60,8 @@
     <script src="https://cdn.socket.io/4.7.1/socket.io.min.js"></script>
     <script>
         const socket = io(); // Socket kapcsolat létrehozása a szerverrel
+
+        let isPaused = false; // Változó a visszaszámláló állapotának nyomon követéséhez
 
         socket.on('updateCountdown', function(countdownTime) {
             // Visszaszámláló frissítése
@@ -74,6 +81,14 @@
 
         function stopCountdown() {
             socket.emit('stopCountdown'); // Visszaszámlálási idő megállítása a szerveren
+            document.getElementById("stop-btn").style.display = "none";
+            document.getElementById("resume-btn").style.display = "block";
+        }
+
+        function resumeCountdown() {
+            socket.emit('resumeCountdown'); // Visszaszámlálási idő folytatása a szerveren
+            document.getElementById("stop-btn").style.display = "block";
+            document.getElementById("resume-btn").style.display = "none";
         }
     </script>
 </head>
@@ -85,8 +100,11 @@
     <div id="input-container">
         <input type="number" id="hoursInput" placeholder="Adja meg az órák számát" />
         <input type="number" id="minutesInput" placeholder="Adja meg a percek számát" />
-        <button onclick="setCountdown()">Indítás</button>
-        <button onclick="stopCountdown()">Megállítás</button>
+        <div class="button-container">
+            <button onclick="setCountdown()">Indítás</button>
+            <button id="stop-btn" onclick="stopCountdown()">Megállítás</button>
+            <button id="resume-btn" onclick="resumeCountdown()" style="display: none;">Folytatás</button>
+        </div>
     </div>
 </body>
 </html>
