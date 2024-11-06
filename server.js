@@ -9,6 +9,7 @@ const io = socketIo(server);
 
 let countdownTime = 0; // Visszaszámlálási idő másodpercben
 let countdownInterval; // Visszaszámláló intervallum
+let isRunning = false; // Állapot jelzése, hogy a visszaszámláló fut-e
 
 // Bejövő socket kapcsolatok kezelése
 io.on("connection", (socket) => {
@@ -22,13 +23,14 @@ io.on("connection", (socket) => {
         countdownTime = time;
         clearInterval(countdownInterval); // Előző visszaszámláló intervallum törlése, ha van
         io.emit("updateCountdown", countdownTime); // Frissített visszaszámlálási idő elküldése minden kliensnek
+        isRunning = true; // Állapot beállítása futásra
 
         // Új visszaszámláló intervallum beállítása
         countdownInterval = setInterval(() => {
-            if (countdownTime > 0) {
+            if (countdownTime > 0 && isRunning) {
                 countdownTime--;
                 io.emit("updateCountdown", countdownTime); // Minden kliens frissítése másodpercenként
-            } else {
+            } else if (countdownTime === 0) {
                 clearInterval(countdownInterval); // Visszaszámlálás leállítása, ha elérte a nullát
             }
         }, 1000);
@@ -36,8 +38,24 @@ io.on("connection", (socket) => {
 
     // Visszaszámlálás megállítása
     socket.on("stopCountdown", () => {
+        isRunning = false; // Állapot beállítása megállásra
         clearInterval(countdownInterval);
         io.emit("updateCountdown", countdownTime); // Frissített visszaszámlálási idő elküldése minden kliensnek
+    });
+
+    // Visszaszámlálás folytatása
+    socket.on("resumeCountdown", () => {
+        isRunning = true; // Állapot beállítása futásra
+
+        // Új visszaszámláló intervallum beállítása
+        countdownInterval = setInterval(() => {
+            if (countdownTime > 0 && isRunning) {
+                countdownTime--;
+                io.emit("updateCountdown", countdownTime); // Minden kliens frissítése másodpercenként
+            } else if (countdownTime === 0) {
+                clearInterval(countdownInterval); // Visszaszámlálás leállítása, ha elérte a nullát
+            }
+        }, 1000);
     });
 
     // Kapcsolat bontása kezelése
@@ -51,5 +69,4 @@ app.use(express.static(path.join(__dirname)));
 
 // Szerver indítása
 server.listen(3000, () => {
-    console.log("Szerver fut a 3000-es porton");
-});
+    console.log("Szerver fut a 3000-es porton"); });
