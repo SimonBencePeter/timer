@@ -4,6 +4,41 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Timer</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-around;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        #timer {
+            font-size: 72px; /* Nagyobb betűméret */
+            font-weight: bold; /* Vastagabb betűtípus */
+            background-color: #333; /* Szürkés háttér */
+            color: #fff; /* Fehér betűszín */
+            padding: 20px;
+            border-radius: 10px;
+        }
+        input {
+            margin: 5px 0;
+            padding: 10px;
+            font-size: 16px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
     <script src="https://cdn.socket.io/4.7.1/socket.io.min.js"></script>
     <script>
         const socket = io(); // Socket kapcsolat létrehozása a szerverrel
@@ -13,7 +48,7 @@
             const hours = Math.floor(countdownTime / 3600);
             const minutes = Math.floor((countdownTime % 3600) / 60);
             const seconds = countdownTime % 60;
-            document.getElementById("timer").innerText = `${hours} óra ${minutes} perc ${seconds} másodperc`;
+            document.getElementById("timer").innerText = `${hours}:${minutes}:${seconds}`;
         });
 
         function setCountdown() {
@@ -25,10 +60,14 @@
     </script>
 </head>
 <body>
-    <h1>Visszaszámláló</h1>
-    <p id="timer">0 óra 0 perc 0 másodperc</p>
-    <input type="number" id="hoursInput" placeholder="Adja meg az órák számát" />
-    <input type="number" id="minutesInput" placeholder="Adja meg a percek számát" />
-    <button onclick="setCountdown()">Indítás</button>
+    <section>
+        <h1>Visszaszámláló</h1>
+        <p id="timer">0:0:0</p>
+    </section>
+    <section>
+        <input type="number" id="hoursInput" placeholder="Adja meg az órák számát" />
+        <input type="number" id="minutesInput" placeholder="Adja meg a percek számát" />
+        <button onclick="setCountdown()">Indítás</button>
+    </section>
 </body>
 </html>
