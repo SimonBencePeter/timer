@@ -1,44 +1,39 @@
-const express = require("express");
-const http = require("http");
-const socketIo = require("socket.io");
+const express = require('express');
+const http = require('http');
+const socketIo = require('socket.io');
 
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
 
-let countdownTime = 0; // Kezdeti visszaszámláló érték
+let countdownTime = 0; // Kezdeti idő másodpercekben
 
-// Üzenet küldése minden kliensnek, amikor a visszaszámlálás változik
-io.on("connection", (socket) => {
-    console.log("Új kliens csatlakozott");
+// A Socket.IO kapcsolat figyelése
+io.on('connection', (socket) => {
+    console.log('Új kliens csatlakozott');
 
-    // Kezdeti visszaszámlálási idő küldése az új kliensnek
-    socket.emit("updateCountdown", countdownTime);
+    // Az aktuális visszaszámlálási idő küldése
+    socket.emit('updateCountdown', countdownTime);
 
-    // Idő beállítása
-    socket.on("setCountdown", (time) => {
-        countdownTime = time;
-        io.emit("updateCountdown", countdownTime); // Frissítés minden kliensnek
-    });
-
-    socket.on("disconnect", () => {
-        console.log("Kliens lecsatlakozott");
+    // A visszaszámláló beállítása
+    socket.on('setCountdown', (timeInSeconds) => {
+        countdownTime = timeInSeconds;
+        io.emit('updateCountdown', countdownTime); // Frissítés minden kliensnek
     });
 });
 
-// Egyszerű weboldal kiszolgálása
-app.get("/", (req, res) => {
-    res.sendFile(__dirname + "/index.html");
-});
+// Statikus fájlok kiszolgálása a "public" mappából
+app.use(express.static('public'));
 
+// A szerver elindítása
 server.listen(3000, () => {
-    console.log("Szerver fut a 3000-es porton");
+    console.log('Szerver fut a 3000-es porton');
 });
 
 // Másodpercenként csökkenti az időt, ha a visszaszámlálás elindult
 setInterval(() => {
     if (countdownTime > 0) {
         countdownTime--;
-        io.emit("updateCountdown", countdownTime); // Frissítés minden kliensnek
+        io.emit('updateCountdown', countdownTime); // Frissítés minden kliensnek
     }
 }, 1000);
