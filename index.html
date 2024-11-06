@@ -6,23 +6,29 @@
     <title>Timer</title>
     <script src="https://cdn.socket.io/4.7.1/socket.io.min.js"></script>
     <script>
-        const socket = io(); // Creating the socket connection to the server
+        const socket = io(); // Socket kapcsolat létrehozása a szerverrel
 
         socket.on('updateCountdown', function(countdownTime) {
-            // Update the countdown display
-            document.getElementById("timer").innerText = countdownTime;
+            // Visszaszámláló frissítése
+            const hours = Math.floor(countdownTime / 3600);
+            const minutes = Math.floor((countdownTime % 3600) / 60);
+            const seconds = countdownTime % 60;
+            document.getElementById("timer").innerText = `${hours} óra ${minutes} perc ${seconds} másodperc`;
         });
 
         function setCountdown() {
-            const timeInput = document.getElementById('timeInput').value;
-            socket.emit('setCountdown', parseInt(timeInput)); // Emit event to server to set the time
+            const hours = parseInt(document.getElementById('hoursInput').value) || 0;
+            const minutes = parseInt(document.getElementById('minutesInput').value) || 0;
+            const timeInSeconds = (hours * 3600) + (minutes * 60);
+            socket.emit('setCountdown', timeInSeconds); // Visszaszámlálási idő elküldése a szervernek
         }
     </script>
 </head>
 <body>
     <h1>Visszaszámláló</h1>
-    <p id="timer">0</p>
-    <input type="number" id="timeInput" placeholder="Adja meg az időt másodpercben" />
+    <p id="timer">0 óra 0 perc 0 másodperc</p>
+    <input type="number" id="hoursInput" placeholder="Adja meg az órák számát" />
+    <input type="number" id="minutesInput" placeholder="Adja meg a percek számát" />
     <button onclick="setCountdown()">Indítás</button>
 </body>
 </html>
