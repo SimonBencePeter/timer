@@ -4,40 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Timer</title>
-    <style>
-        #timer {
-            font-size: 50px;
-            font-weight: bold;
-        }
-    </style>
-    <script src="https://cdn.socket.io/4.7.1/socket.io.min.js"></script>
+   <script src="https://cdn.socket.io/4.7.1/socket.io.min.js"></script>
     <script>
         const socket = io(); // A kapcsolat létrehozása a szerverrel
 
         socket.on('updateCountdown', function(countdownTime) {
-            // Visszaszámláló frissítése óra:perc:másodperc formátumban
-            const hours = Math.floor(countdownTime / 3600); // Órák
-            const minutes = Math.floor((countdownTime % 3600) / 60); // Percek
-            const seconds = countdownTime % 60; // Másodpercek
-
-            // A formázott idő megjelenítése
-            document.getElementById("timer").innerText = 
-                `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            // Visszaszámláló frissítése
+            document.getElementById("timer").innerText = countdownTime;
         });
 
         function setCountdown() {
             const timeInput = document.getElementById('timeInput').value;
-            const timeInSeconds = timeInput * 60; // Percben beírt érték másodpercre konvertálása
-            socket.emit('setCountdown', timeInSeconds); // Esemény küldése a szervernek
+            socket.emit('setCountdown', parseInt(timeInput)); // Esemény küldése a szervernek
         }
     </script>
 </head>
 <body>
     <h1>Visszaszámláló</h1>
-    <p id="timer">00:00:00</p>
-
-    <label for="timeInput">Adja meg az időt (percben):</label>
-    <input type="number" id="timeInput" placeholder="Adja meg az időt percben" />
+    <p id="timer">0</p>
+    <input type="number" id="timeInput" placeholder="Adja meg az időt másodpercben" />
     <button onclick="setCountdown()">Indítás</button>
 </body>
 </html>
