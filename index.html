@@ -7,20 +7,46 @@
 </head>
 <body>
     <h1>Visszaszámláló</h1>
+
+    <!-- Visszaszámláló megjelenítés -->
     <div id="countdownDisplay">00:00:00</div>
-    
+
+    <!-- Beállítási űrlap a visszaszámlálási időhöz -->
+    <form id="setCountdownForm">
+        <label for="countdownSeconds">Idő (másodpercben):</label>
+        <input type="number" id="countdownSeconds" name="countdownSeconds" min="1" required>
+        <button type="submit">Visszaszámlálás indítása</button>
+    </form>
+
     <script src="/socket.io/socket.io.js"></script>
     <script>
         const countdownDisplay = document.getElementById('countdownDisplay');
+        const setCountdownForm = document.getElementById('setCountdownForm');
         const socket = io();
 
         let countdownEndTime = null;
 
+        // WebSocket esemény fogadása a szerverről
         socket.on('countdown', (serverEndTime) => {
             countdownEndTime = serverEndTime;
             updateCountdown();
         });
 
+        // Visszaszámlálási idő küldése a szervernek az űrlap elküldésekor
+        setCountdownForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const seconds = document.getElementById('countdownSeconds').value;
+
+            // Küldés a szervernek az API végponton keresztül
+            fetch(`/setCountdown?seconds=${seconds}`)
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data.message);
+                })
+                .catch(error => console.error('Hiba történt:', error));
+        });
+
+        // Visszaszámláló frissítése
         function updateCountdown() {
             const interval = setInterval(() => {
                 if (countdownEndTime) {
