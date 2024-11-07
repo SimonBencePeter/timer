@@ -36,12 +36,13 @@ io.on("connection", (socket) => {
 
     // Visszaszámlálás megállítása
     socket.on("stopCountdown", () => {
-        clearInterval(countdownInterval);
+        clearInterval(countdownInterval); // Aktív visszaszámláló intervallum törlése
         io.emit("updateCountdown", countdownTime); // Frissített visszaszámlálási idő elküldése minden kliensnek
     });
 
     // Visszaszámlálás folytatása
     socket.on("resumeCountdown", () => {
+        clearInterval(countdownInterval); // Előző visszaszámláló intervallum törlése, ha van
         io.emit("updateCountdown", countdownTime); // Frissített visszaszámlálási idő elküldése minden kliensnek
         countdownInterval = setInterval(() => {
             if (countdownTime > 0) {
