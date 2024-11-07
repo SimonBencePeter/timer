@@ -10,8 +10,8 @@ const io = socketIo(server);
 
 let countdownTime = 0;
 let countdownInterval;
-const adminPassword = "your_admin_password"; // Állítsd be itt az admin jelszót
-const jwtSecret = "your_jwt_secret"; // Generálj egy erős titkos kulcsot
+const adminPassword = "admin"; // Állítsd be itt az admin jelszót
+const jwtSecret = "!!!!!!!!!!"; // Generálj egy erős titkos kulcsot
 
 io.on("connection", (socket) => {
     console.log("Új kliens csatlakozott");
