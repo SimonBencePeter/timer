@@ -10,83 +10,96 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 130vh;
+            height: 100vh;
             margin: 0;
             font-family: Arial, sans-serif;
-            background-color: #f0f0f0; /* Világos szürke háttér */
+            background-color: #f0f0f0;
         }
         #timer-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-            height: 100vh; /* Kitölti a kijelző nagy részét */
+            width: 80%;
+            max-width: 400px;
+            text-align: center;
+            margin-bottom: 20px;
         }
         #timer {
-            font-size: 140px; /* Nagyobb betűméret */
-            font-weight: bold; /* Vastagabb betűtípus */
-            background-color: #333; /* Szürkés háttér */
-            color: #fff; /* Fehér betűszín */
+            font-size: 140px;
+            font-weight: bold;
+            background-color: #333;
+            color: #fff;
             padding: 20px;
             border-radius: 10px;
-            text-align: center;
         }
-        #input-container {
+        #login-container, #input-container {
+            width: 80%;
+            max-width: 400px;
+            margin-top: 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            width: 80%;
-            margin-top: 20px;
         }
-        .button-container {
-            display: flex;
-            justify-content: space-around;
-            width: 100%;
+        #input-container {
+            display: none;
         }
-        input {
-            margin: 5px 0;
+        input, button {
             padding: 10px;
             font-size: 16px;
-            width: 100%; /* Széles beviteli mezők */
-        }
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-            margin-top: 10px;
+            margin: 5px 0;
+            width: 100%;
         }
     </style>
     <script src="https://cdn.socket.io/4.7.1/socket.io.min.js"></script>
     <script>
-        const socket = io(); // Socket kapcsolat létrehozása a szerverrel
+        let socket;
 
-        let isPaused = false; // Változó a visszaszámláló állapotának nyomon követéséhez
+        async function login() {
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
 
-        socket.on('updateCountdown', function(countdownTime) {
-            // Visszaszámláló frissítése
-            const hours = Math.floor(countdownTime / 3600);
-            const minutes = Math.floor((countdownTime % 3600) / 60);
-            const seconds = countdownTime % 60;
-            const hoursText = hours > 0 ? `${hours}:` : "";
-            document.getElementById("timer").innerText = `${hoursText}${minutes}:${seconds}`;
-        });
+            const response = await fetch("/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ username, password })
+            });
+
+            if (response.ok) {
+                const { token } = await response.json();
+                startSocketConnection(token);
+                document.getElementById("login-container").style.display = "none";
+                document.getElementById("input-container").style.display = "flex";
+            } else {
+                alert("Hibás felhasználónév vagy jelszó!");
+            }
+        }
+
+        function startSocketConnection(token) {
+            socket = io({ auth: { token } });
+
+            socket.on("updateCountdown", (countdownTime) => {
+                const hours = Math.floor(countdownTime / 3600);
+                const minutes = Math.floor((countdownTime % 3600) / 60);
+                const seconds = countdownTime % 60;
+                const hoursText = hours > 0 ? `${hours}:` : "";
+                document.getElementById("timer").innerText = `${hoursText}${minutes}:${seconds}`;
+            });
+        }
 
         function setCountdown() {
             const hours = parseInt(document.getElementById('hoursInput').value) || 0;
             const minutes = parseInt(document.getElementById('minutesInput').value) || 0;
             const timeInSeconds = (hours * 3600) + (minutes * 60);
-            socket.emit('setCountdown', timeInSeconds); // Visszaszámlálási idő elküldése a szervernek
+            socket.emit('setCountdown', timeInSeconds);
         }
 
         function stopCountdown() {
-            socket.emit('stopCountdown'); // Visszaszámlálási idő megállítása a szerveren
+            socket.emit('stopCountdown');
             document.getElementById("stop-btn").style.display = "none";
             document.getElementById("resume-btn").style.display = "block";
         }
 
         function resumeCountdown() {
-            socket.emit('resumeCountdown'); // Visszaszámlálási idő folytatása a szerveren
+            socket.emit('resumeCountdown');
             document.getElementById("stop-btn").style.display = "block";
             document.getElementById("resume-btn").style.display = "none";
         }
@@ -97,14 +110,19 @@
         <h1>Visszaszámláló</h1>
         <p id="timer">0:0</p>
     </div>
+
+    <div id="login-container">
+        <input type="text" id="username" placeholder="Felhasználónév">
+        <input type="password" id="password" placeholder="Jelszó">
+        <button onclick="login()">Bejelentkezés</button>
+    </div>
+
     <div id="input-container">
         <input type="number" id="hoursInput" placeholder="Adja meg az órák számát" />
         <input type="number" id="minutesInput" placeholder="Adja meg a percek számát" />
-        <div class="button-container">
-            <button onclick="setCountdown()">Indítás</button>
-            <button id="stop-btn" onclick="stopCountdown()">Megállítás</button>
-            <button id="resume-btn" onclick="resumeCountdown()" style="display: none;">Folytatás</button>
-        </div>
+        <button onclick="setCountdown()">Indítás</button>
+        <button id="stop-btn" onclick="stopCountdown()">Megállítás</button>
+        <button id="resume-btn" onclick="resumeCountdown()" style="display: none;">Folytatás</button>
     </div>
 </body>
 </html>
