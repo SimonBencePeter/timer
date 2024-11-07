@@ -2,68 +2,84 @@ const express = require("express");
 const http = require("http");
 const socketIo = require("socket.io");
 const path = require("path");
+const jwt = require("jsonwebtoken");
 
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
 
-let countdownTime = 0; // Visszaszámlálási idő másodpercben
-let countdownInterval; // Visszaszámláló intervallum
+const SECRET_KEY = "supersecretkey";
+const ADMIN_USER = { username: "admin", password: "password123" };
 
-// Bejövő socket kapcsolatok kezelése
+let countdownTime = 0;
+let countdownInterval;
+
+app.use(express.json());
+
+app.post("/login", (req, res) => {
+    const { username, password } = req.body;
+    
+    if (username === ADMIN_USER.username && password === ADMIN_USER.password) {
+        const token = jwt.sign({ username }, SECRET_KEY, { expiresIn: "1h" });
+        return res.json({ token });
+    } else {
+        return res.status(401).json({ message: "Hibás felhasználónév vagy jelszó" });
+    }
+});
+
+function authenticateToken(socket, next) {
+    const token = socket.handshake.auth.token;
+    if (!token) return next(new Error("Hitelesítés szükséges"));
+
+    jwt.verify(token, SECRET_KEY, (err, user) => {
+        if (err) return next(new Error("Érvénytelen token"));
+        socket.user = user;
+        next();
+    });
+}
+
+io.use(authenticateToken);
+
 io.on("connection", (socket) => {
-    console.log("Új kliens csatlakozott");
-
-    // Kezdeti visszaszámlálási idő küldése az új kliensnek
     socket.emit("updateCountdown", countdownTime);
 
-    // Visszaszámlálási idő beállítása a kliens által küldött érték alapján
     socket.on("setCountdown", (time) => {
         countdownTime = time;
-        clearInterval(countdownInterval); // Előző visszaszámláló intervallum törlése, ha van
-        io.emit("updateCountdown", countdownTime); // Frissített visszaszámlálási idő elküldése minden kliensnek
+        clearInterval(countdownInterval);
+        io.emit("updateCountdown", countdownTime);
 
-        // Új visszaszámláló intervallum beállítása
         countdownInterval = setInterval(() => {
             if (countdownTime > 0) {
                 countdownTime--;
-                io.emit("updateCountdown", countdownTime); // Minden kliens frissítése másodpercenként
+                io.emit("updateCountdown", countdownTime);
             } else {
-                clearInterval(countdownInterval); // Visszaszámlálás leállítása, ha elérte a nullát
+                clearInterval(countdownInterval);
             }
         }, 1000);
     });
 
-    // Visszaszámlálás megállítása
     socket.on("stopCountdown", () => {
-        clearInterval(countdownInterval); // Aktív visszaszámláló intervallum törlése
-        io.emit("updateCountdown", countdownTime); // Frissített visszaszámlálási idő elküldése minden kliensnek
+        clearInterval(countdownInterval);
+        io.emit("updateCountdown", countdownTime);
     });
 
-    // Visszaszámlálás folytatása
     socket.on("resumeCountdown", () => {
-        clearInterval(countdownInterval); // Előző visszaszámláló intervallum törlése, ha van
-        io.emit("updateCountdown", countdownTime); // Frissített visszaszámlálási idő elküldése minden kliensnek
+        clearInterval(countdownInterval);
+        io.emit("updateCountdown", countdownTime);
+
         countdownInterval = setInterval(() => {
             if (countdownTime > 0) {
                 countdownTime--;
-                io.emit("updateCountdown", countdownTime); // Minden kliens frissítése másodpercenként
+                io.emit("updateCountdown", countdownTime);
             } else {
-                clearInterval(countdownInterval); // Visszaszámlálás leállítása, ha elérte a nullát
+                clearInterval(countdownInterval);
             }
         }, 1000);
-    });
-
-    // Kapcsolat bontása kezelése
-    socket.on("disconnect", () => {
-        console.log("Kliens lecsatlakozott");
     });
 });
 
-// Statikus fájlok kiszolgálása (pl. az index.html fájl)
 app.use(express.static(path.join(__dirname)));
 
-// Szerver indítása
 server.listen(3000, () => {
     console.log("Szerver fut a 3000-es porton");
 });
