@@ -8,73 +8,77 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
 
-const SECRET_KEY = "supersecretkey";
-const ADMIN_USER = { username: "admin", password: "password123" };
-
 let countdownTime = 0;
 let countdownInterval;
-
-app.use(express.json());
-
-app.post("/login", (req, res) => {
-    const { username, password } = req.body;
-    
-    if (username === ADMIN_USER.username && password === ADMIN_USER.password) {
-        const token = jwt.sign({ username }, SECRET_KEY, { expiresIn: "1h" });
-        return res.json({ token });
-    } else {
-        return res.status(401).json({ message: "Hibás felhasználónév vagy jelszó" });
-    }
-});
-
-function authenticateToken(socket, next) {
-    const token = socket.handshake.auth.token;
-    if (!token) return next(new Error("Hitelesítés szükséges"));
-
-    jwt.verify(token, SECRET_KEY, (err, user) => {
-        if (err) return next(new Error("Érvénytelen token"));
-        socket.user = user;
-        next();
-    });
-}
-
-io.use(authenticateToken);
+const adminPassword = "your_admin_password"; // Állítsd be itt az admin jelszót
+const jwtSecret = "your_jwt_secret"; // Generálj egy erős titkos kulcsot
 
 io.on("connection", (socket) => {
+    console.log("Új kliens csatlakozott");
+
+    // Kezdeti visszaszámlálási idő küldése minden csatlakozott kliensnek
     socket.emit("updateCountdown", countdownTime);
 
-    socket.on("setCountdown", (time) => {
-        countdownTime = time;
-        clearInterval(countdownInterval);
-        io.emit("updateCountdown", countdownTime);
-
-        countdownInterval = setInterval(() => {
-            if (countdownTime > 0) {
-                countdownTime--;
-                io.emit("updateCountdown", countdownTime);
-            } else {
-                clearInterval(countdownInterval);
-            }
-        }, 1000);
+    // Hitelesítés fogadása
+    socket.on("authenticate", (password) => {
+        if (password === adminPassword) {
+            const token = jwt.sign({ role: "admin" }, jwtSecret);
+            socket.emit("authenticated", token);
+        } else {
+            socket.emit("authenticationFailed");
+        }
     });
 
-    socket.on("stopCountdown", () => {
-        clearInterval(countdownInterval);
-        io.emit("updateCountdown", countdownTime);
+    // Visszaszámlálási idő beállítása csak hitelesített admin számára
+    socket.on("setCountdown", (time, token) => {
+        try {
+            jwt.verify(token, jwtSecret);
+            countdownTime = time;
+            clearInterval(countdownInterval);
+            io.emit("updateCountdown", countdownTime);
+
+            countdownInterval = setInterval(() => {
+                if (countdownTime > 0) {
+                    countdownTime--;
+                    io.emit("updateCountdown", countdownTime);
+                } else {
+                    clearInterval(countdownInterval);
+                }
+            }, 1000);
+        } catch (error) {
+            socket.emit("unauthorized");
+        }
     });
 
-    socket.on("resumeCountdown", () => {
-        clearInterval(countdownInterval);
-        io.emit("updateCountdown", countdownTime);
+    socket.on("stopCountdown", (token) => {
+        try {
+            jwt.verify(token, jwtSecret);
+            clearInterval(countdownInterval);
+            io.emit("updateCountdown", countdownTime);
+        } catch (error) {
+            socket.emit("unauthorized");
+        }
+    });
 
-        countdownInterval = setInterval(() => {
-            if (countdownTime > 0) {
-                countdownTime--;
-                io.emit("updateCountdown", countdownTime);
-            } else {
-                clearInterval(countdownInterval);
-            }
-        }, 1000);
+    socket.on("resumeCountdown", (token) => {
+        try {
+            jwt.verify(token, jwtSecret);
+            io.emit("updateCountdown", countdownTime);
+            countdownInterval = setInterval(() => {
+                if (countdownTime > 0) {
+                    countdownTime--;
+                    io.emit("updateCountdown", countdownTime);
+                } else {
+                    clearInterval(countdownInterval);
+                }
+            }, 1000);
+        } catch (error) {
+            socket.emit("unauthorized");
+        }
+    });
+
+    socket.on("disconnect", () => {
+        console.log("Kliens lecsatlakozott");
     });
 });
 
