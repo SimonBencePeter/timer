@@ -1,38 +1,35 @@
 const express = require("express");
 const http = require("http");
 const socketIo = require("socket.io");
-const path = require("path");
-const jwt = require("jsonwebtoken");
-
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
 
+const validCredentials = {
+    username: "admin",
+    password: "admin123"
+};
+
 let countdownTime = 0;
 let countdownInterval;
-const adminPassword = "admin"; // Állítsd be itt az admin jelszót
-const jwtSecret = "!!!!!!!!!!"; // Generálj egy erős titkos kulcsot
 
 io.on("connection", (socket) => {
     console.log("Új kliens csatlakozott");
-
-    // Kezdeti visszaszámlálási idő küldése minden csatlakozott kliensnek
     socket.emit("updateCountdown", countdownTime);
-
-    // Hitelesítés fogadása
-    socket.on("authenticate", (password) => {
-        if (password === adminPassword) {
-            const token = jwt.sign({ role: "admin" }, jwtSecret);
-            socket.emit("authenticated", token);
+    
+    // Bejelentkezés kezelése
+    socket.on("authenticate", (credentials) => {
+        if (credentials.username === validCredentials.username && credentials.password === validCredentials.password) {
+            socket.authenticated = true; // Beállítjuk a hitelesítést
+            socket.emit("authenticated");
         } else {
             socket.emit("authenticationFailed");
         }
     });
 
-    // Visszaszámlálási idő beállítása csak hitelesített admin számára
-    socket.on("setCountdown", (time, token) => {
-        try {
-            jwt.verify(token, jwtSecret);
+    // Visszaszámlálás beállítása, ha hitelesítve van
+    socket.on("setCountdown", (time) => {
+        if (socket.authenticated) {  // Ellenőrizzük, hogy be van-e jelentkezve
             countdownTime = time;
             clearInterval(countdownInterval);
             io.emit("updateCountdown", countdownTime);
@@ -45,25 +42,19 @@ io.on("connection", (socket) => {
                     clearInterval(countdownInterval);
                 }
             }, 1000);
-        } catch (error) {
-            socket.emit("unauthorized");
         }
     });
 
-    socket.on("stopCountdown", (token) => {
-        try {
-            jwt.verify(token, jwtSecret);
+    // Stop és Resume logika
+    socket.on("stopCountdown", () => {
+        if (socket.authenticated) {
             clearInterval(countdownInterval);
             io.emit("updateCountdown", countdownTime);
-        } catch (error) {
-            socket.emit("unauthorized");
         }
     });
 
-    socket.on("resumeCountdown", (token) => {
-        try {
-            jwt.verify(token, jwtSecret);
-            io.emit("updateCountdown", countdownTime);
+    socket.on("resumeCountdown", () => {
+        if (socket.authenticated) {
             countdownInterval = setInterval(() => {
                 if (countdownTime > 0) {
                     countdownTime--;
@@ -72,8 +63,6 @@ io.on("connection", (socket) => {
                     clearInterval(countdownInterval);
                 }
             }, 1000);
-        } catch (error) {
-            socket.emit("unauthorized");
         }
     });
 
@@ -81,8 +70,6 @@ io.on("connection", (socket) => {
         console.log("Kliens lecsatlakozott");
     });
 });
-
-app.use(express.static(path.join(__dirname)));
 
 server.listen(3000, () => {
     console.log("Szerver fut a 3000-es porton");
