@@ -21,7 +21,7 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            margin-bottom: 40px; /* Adjunk hozzá helyet a timer és a login között */
+            margin-bottom: 40px;
         }
 
         #timer {
@@ -42,7 +42,7 @@
             position: absolute;
             top: 0;
             width: 100%;
-            margin-bottom: 40px; /* Ezzel a marginnal biztosítjuk, hogy a login alatti terület elég legyen */
+            margin-bottom: 40px;
         }
 
         #controls-container {
@@ -52,7 +52,7 @@
             align-items: center;
         }
 
-        input[type="password"], input[type="number"] {
+        input[type="password"], input[type="text"], input[type="number"] {
             width: 100%;
             padding: 10px;
             font-size: 16px;
@@ -94,8 +94,7 @@
     <script src="https://cdn.socket.io/4.7.1/socket.io.min.js"></script>
     <script>
         const socket = io();
-        let authToken = null;
-
+        
         socket.on("updateCountdown", function(countdownTime) {
             const hours = Math.floor(countdownTime / 3600);
             const minutes = Math.floor((countdownTime % 3600) / 60);
@@ -104,34 +103,34 @@
             document.getElementById("timer").innerText = `${hoursText}${minutes}:${seconds}`;
         });
 
-        socket.on("authenticated", function(token) {
-            authToken = token;
+        socket.on("authenticated", function() {
             document.getElementById("login-container").style.display = "none";
             document.getElementById("controls-container").style.display = "block";
         });
 
         socket.on("authenticationFailed", function() {
-            alert("Hibás jelszó");
+            alert("Hibás felhasználónév vagy jelszó");
         });
 
         function login() {
+            const username = document.getElementById("usernameInput").value;
             const password = document.getElementById("passwordInput").value;
-            socket.emit("authenticate", password);
+            socket.emit("authenticate", { username, password });
         }
 
         function setCountdown() {
             const hours = parseInt(document.getElementById('hoursInput').value) || 0;
             const minutes = parseInt(document.getElementById('minutesInput').value) || 0;
             const timeInSeconds = (hours * 3600) + (minutes * 60);
-            socket.emit("setCountdown", timeInSeconds, authToken);
+            socket.emit("setCountdown", timeInSeconds);
         }
 
         function stopCountdown() {
-            socket.emit("stopCountdown", authToken);
+            socket.emit("stopCountdown");
         }
 
         function resumeCountdown() {
-            socket.emit("resumeCountdown", authToken);
+            socket.emit("resumeCountdown");
         }
     </script>
 </head>
@@ -144,7 +143,8 @@
     <div id="login-container">
         <div>
             <h2>Admin Bejelentkezés</h2>
-            <input type="password" id="passwordInput" placeholder="Admin jelszó">
+            <input type="text" id="usernameInput" placeholder="Felhasználónév">
+            <input type="password" id="passwordInput" placeholder="Jelszó">
             <button onclick="login()">Bejelentkezés</button>
         </div>
     </div>
@@ -154,10 +154,3 @@
             <h2>Visszaszámláló Beállítás</h2>
             <input type="number" id="hoursInput" placeholder="Órák">
             <input type="number" id="minutesInput" placeholder="Percek">
-            <button onclick="setCountdown()">Indítás</button>
-            <button onclick="stopCountdown()">Megállítás</button>
-            <button onclick="resumeCountdown()">Folytatás</button>
-        </div>
-    </div>
-</body>
-</html>
