@@ -81,7 +81,9 @@
                 const minutes = Math.floor((countdownTime % 3600) / 60);
                 const seconds = countdownTime % 60;
                 const hoursText = hours > 0 ? `${hours}:` : "";
-                document.getElementById("timer").innerText = `${hoursText}${minutes}:${seconds}`;
+                //const minutesText = String(minutes).padStart(2, '0'); 
+                const secondsText = String(seconds).padStart(2, '0');
+                document.getElementById("timer").innerText = `${hoursText}${minutes}:${secondsText}`;
             });
         }
 
